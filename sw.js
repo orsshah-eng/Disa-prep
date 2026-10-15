@@ -1,6 +1,6 @@
 /* DISA Prep Simulator – offline service worker.
    Bump VERSION whenever index.html changes so phones pick up the update. */
-const VERSION = 'disa-prep-v2';
+const VERSION = 'disa-prep-v3';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

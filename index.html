@@ -258,6 +258,38 @@ details summary::-webkit-details-marker{display:none}
 .arow .s{font-size:.88rem;line-height:1.4;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .install{display:flex;gap:12px;align-items:center}
 .install img{width:46px;height:46px;border-radius:12px;flex:none}
+/* ---------- desktop (landscape) layout – opt-in from Settings, screens 900px+ ---------- */
+.qside .card{margin-bottom:14px}
+.qside .expl{margin-top:0}
+.kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 6px;font-size:.74rem;font-weight:800;color:var(--ink2);background:var(--card)}
+@media(min-width:900px){
+  html[data-lay="wide"] .bar{max-width:1280px;padding:12px 28px 6px}
+  html[data-lay="wide"] .tabs{max-width:1280px;padding:4px 24px 10px;justify-content:flex-start}
+  html[data-lay="wide"] .tabs button{flex:0 0 auto;padding:9px 20px}
+  html[data-lay="wide"] main{max-width:1280px;padding:22px 28px 120px}
+  html[data-lay="wide"] .dock .in{max-width:1280px;justify-content:flex-end;padding:0 28px}
+  html[data-lay="wide"] .dock{padding-left:16px;padding-right:16px}
+  html[data-lay="wide"] .dock .btn{flex:0 0 auto;min-width:150px}
+  html[data-lay="wide"] .dock .btn.nav{min-width:64px}
+  html[data-lay="wide"] .cols{column-count:2;column-gap:18px}
+  html[data-lay="wide"] .cols>*{break-inside:avoid;page-break-inside:avoid}
+  html[data-lay="wide"] .cols>.card{display:block;width:100%}
+  html[data-lay="wide"] .cols{orphans:1;widows:1}
+  html[data-lay="wide"] .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px;align-items:start}
+  html[data-lay="wide"] .grid2>.span{grid-column:1/-1}
+  html[data-lay="wide"] .cols>.span{column-span:all}
+  html[data-lay="wide"] .qgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start}
+  html[data-lay="wide"] .qgrid>.card{margin-bottom:0}
+  html[data-lay="wide"] .qside{position:sticky;top:var(--hh,120px);max-height:calc(100vh - var(--hh,120px) - 96px);overflow:auto;border-radius:var(--r)}
+  html[data-lay="wide"] .qtext{font-size:1.18rem}
+  html[data-lay="wide"] .chips{flex-wrap:wrap;overflow:visible}
+  html[data-lay="wide"] .palette{grid-template-columns:repeat(auto-fill,minmax(46px,1fr))}
+  html[data-lay="wide"] #tab-fc{max-width:900px;margin:0 auto}
+  html[data-lay="wide"] .face{min-height:400px;padding:28px 30px 24px}
+  html[data-lay="wide"] .ftext{font-size:1.5rem}
+  html[data-lay="wide"] .btext{font-size:1.02rem}
+  html[data-lay="wide"] .mockbar{top:var(--hh,120px)}
+}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 /* ---------- print report ---------- */
 @media print{
@@ -350,7 +382,7 @@ function mlabel(m){return B().mprefix+m;}
 const KEY='disa_mcq_progress_v1';
 let storageOK=true;
 function bankBlank(){return {q:{},bm:{},fc:{},mocks:[],last:null,run:null,log:[]};}
-function blank(){return {v:2,cur:'disa',b:{disa:bankBlank(),cisa:bankBlank()},days:{},ui:{theme:'',fs:'',tab:'dash'},name:'',created:Date.now()};}
+function blank(){return {v:2,cur:'disa',b:{disa:bankBlank(),cisa:bankBlank()},days:{},ui:{theme:'',fs:'',lay:'',tab:'dash'},name:'',created:Date.now()};}
 function migrate(o){
   if(!o)return blank();
   if(o.v===1){const n=blank();n.b.disa={q:o.q||{},bm:o.bm||{},fc:{},mocks:(o.mocks||[]),last:o.last||null,run:o.run||null};
@@ -397,12 +429,15 @@ function applyUI(){
   const h=document.documentElement;
   if(S.ui.theme)h.setAttribute('data-theme',S.ui.theme);else h.removeAttribute('data-theme');
   if(S.ui.fs)h.setAttribute('data-fs',S.ui.fs);else h.removeAttribute('data-fs');
+  if(S.ui.lay==='wide')h.setAttribute('data-lay','wide');else h.removeAttribute('data-lay');
   document.querySelectorAll('.bankseg button').forEach(b=>b.classList.toggle('on',b.dataset.bank===BK));
   $('#logo').textContent=BK==='disa'?'D':'C';
   $('#bankSub').textContent='by CA Onil Shah';
   requestAnimationFrame(()=>h.style.setProperty('--hh',($('#appbar').offsetHeight+8)+'px'));
 }
-addEventListener('resize',applyUI);
+const isWide=()=>S.ui.lay==='wide'&&innerWidth>=900;
+let lastWide=null;
+addEventListener('resize',()=>{applyUI();const w=isWide();if(lastWide!==null&&w!==lastWide)render();lastWide=w;});
 let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
 function modal(title,html,buttons){
@@ -436,15 +471,18 @@ function resetBankViews(){
 }
 /* settings */
 $('#btnSet').onclick=()=>{
-  const th=S.ui.theme,fs=S.ui.fs;
+  const th=S.ui.theme,fs=S.ui.fs,lay=S.ui.lay||'';
   modal('Settings','<label class="fl" style="margin-top:4px">Theme</label><div class="seg" id="setTheme"><button data-v="" class="'+(th===''?'on':'')+'">Auto</button><button data-v="light" class="'+(th==='light'?'on':'')+'">Light</button><button data-v="dark" class="'+(th==='dark'?'on':'')+'">Dark</button></div>'+
    '<label class="fl">Text size</label><div class="seg" id="setFs"><button data-v="" class="'+(fs===''?'on':'')+'">Normal</button><button data-v="l" class="'+(fs==='l'?'on':'')+'">Large</button><button data-v="xl" class="'+(fs==='xl'?'on':'')+'">Extra large</button></div>'+
+   '<label class="fl">Layout</label><div class="seg" id="setLay"><button data-v="" class="'+(lay===''?'on':'')+'">📱 Phone</button><button data-v="wide" class="'+(lay==='wide'?'on':'')+'">💻 Desktop (landscape)</button></div>'+
+   '<div class="small muted" id="layNote" style="margin-top:6px">'+(innerWidth<900?'Desktop layout takes effect on screens at least 900 px wide (laptop or tablet in landscape). This screen keeps the phone layout.':'Desktop uses the full width: two-column dashboard, question and explanation side by side, and the question palette always visible in mock tests.')+'</div>'+
    '<label class="fl">Name on PDF reports</label><input type="text" id="setName" placeholder="e.g. CA Onil Shah" value="'+esc(S.name||'')+'">'+
    (isStandalone()?'<p class="small muted" style="margin:14px 0 0">✓ Running as an installed app.</p>':'<button class="btn soft block" style="margin-top:16px" data-act="install">Install app on this phone</button>')+
    '<p class="small muted" style="margin:14px 0 0">DISA Prep Simulator by CA Onil Shah</p>',
    [{label:'Done',cls:'primary',fn:()=>{S.name=$('#setName').value.trim();save();}}]);
   $('#setTheme').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.ui.theme=b.dataset.v;applyUI();save();$('#setTheme').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));};
   $('#setFs').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.ui.fs=b.dataset.v;applyUI();save();$('#setFs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));};
+  $('#setLay').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.ui.lay=b.dataset.v;applyUI();save();lastWide=isWide();render();$('#setLay').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));};
 };
 /* ---------- charts ---------- */
 function lineSVG(pts,empty){
@@ -481,10 +519,10 @@ function renderDash(){
   else if(s.acc>=.6)status='Good – revise the explanations of the questions marked incorrect.';
   else status='Needs work – practise '+(b.mword.toLowerCase())+'-wise and re-read the explanations.';
   let h='';
-  if(!storageOK)h+='<div class="banner">Progress cannot be saved in this browser view. Open this app in <b>Chrome</b> so your progress is kept.</div>';
-  if(installEvt&&!isStandalone())h+='<div class="card install"><img src="icons/icon-192.png" alt=""><div style="flex:1"><div style="font-weight:800">Install DISA Prep</div><div class="small muted">Full-screen app with its own icon. Works offline.</div></div><button class="btn sm primary" data-act="install">Install</button></div>';
-  h+='<div class="card hero"><div class="row between" style="align-items:flex-start"><div><div class="muted small">'+esc(b.name)+' · bank covered</div><div class="big num">'+s.att+' <span style="font-size:1rem;font-weight:700;opacity:.8">of '+s.tot+'</span></div></div><div style="text-align:right"><div class="muted small">Overall score</div><div class="big num">'+pct(s.cor/s.tot)+'</div></div></div><div class="pbar" style="margin:12px 0"><i style="width:'+(s.att/s.tot*100)+'%"></i></div><div class="small" style="opacity:.95">'+esc(status)+'</div></div>';
-  h+='<div class="kpis">'+kpi('Accuracy',s.att?pct(s.acc):'–',s.cor+' right · '+s.wrong+' wrong')+kpi('Revisions',s.att?(s.tries/s.att).toFixed(1)+'×':'–',s.tries+' answers given')+kpi('Study streak',sk.cur+(sk.cur===1?' day':' days'),'Best '+sk.best+' · '+sk.days+' active days')+kpi('Time today',fmtMin(td.s),'Total '+fmtMin(totS))+'</div>';
+  if(!storageOK)h+='<div class="banner span">Progress cannot be saved in this browser view. Open this app in <b>Chrome</b> so your progress is kept.</div>';
+  if(installEvt&&!isStandalone())h+='<div class="card install span"><img src="icons/icon-192.png" alt=""><div style="flex:1"><div style="font-weight:800">Install DISA Prep</div><div class="small muted">Full-screen app with its own icon. Works offline.</div></div><button class="btn sm primary" data-act="install">Install</button></div>';
+  h+='<div class="card hero span"><div class="row between" style="align-items:flex-start"><div><div class="muted small">'+esc(b.name)+' · bank covered</div><div class="big num">'+s.att+' <span style="font-size:1rem;font-weight:700;opacity:.8">of '+s.tot+'</span></div></div><div style="text-align:right"><div class="muted small">Overall score</div><div class="big num">'+pct(s.cor/s.tot)+'</div></div></div><div class="pbar" style="margin:12px 0"><i style="width:'+(s.att/s.tot*100)+'%"></i></div><div class="small" style="opacity:.95">'+esc(status)+'</div></div>';
+  h+='<div class="kpis span">'+kpi('Accuracy',s.att?pct(s.acc):'–',s.cor+' right · '+s.wrong+' wrong')+kpi('Revisions',s.att?(s.tries/s.att).toFixed(1)+'×':'–',s.tries+' answers given')+kpi('Study streak',sk.cur+(sk.cur===1?' day':' days'),'Best '+sk.best+' · '+sk.days+' active days')+kpi('Time today',fmtMin(td.s),'Total '+fmtMin(totS))+'</div>';
   let pts;
   if(trendMode==='prac'){pts=Object.keys(S.days).filter(k=>S.days[k].bk&&S.days[k].bk[BK]&&S.days[k].bk[BK].a>0).sort().slice(-14).map(k=>{const x=S.days[k].bk[BK];return {label:lbl(k),v:x.c/x.a,n:x.a};});
     if(!pts.length&&BK==='disa')pts=Object.keys(S.days).filter(k=>S.days[k].a>0&&!S.days[k].bk).sort().slice(-14).map(k=>({label:lbl(k),v:S.days[k].c/S.days[k].a,n:S.days[k].a}));}
@@ -517,8 +555,8 @@ function renderDash(){
   let k=0,rv=0;b.cards.forEach(c=>{const f=st.fc[c.id];if(f&&f.s==='k')k++;else if(f&&f.s==='r')rv++;});const un=b.cards.length-k-rv;
   h+='<div class="card"><div class="row between"><h3 style="margin:0">Concept flashcards</h3><button class="link" data-act="goto" data-v="fc">Open ›</button></div><div class="dist" style="margin-top:12px"><i style="width:'+(k/b.cards.length*100)+'%;background:var(--ok)"></i><i style="width:'+(rv/b.cards.length*100)+'%;background:var(--bad)"></i></div><div class="leg2"><span><i style="background:var(--ok)"></i>Known · '+k+'</span><span><i style="background:var(--bad)"></i>To revise · '+rv+'</span><span>Not seen · '+un+' of '+b.cards.length+'</span></div></div>';
   h+='<div class="card"><h3>Your data</h3><div class="sub">Progress for both banks is saved in this browser on this phone. Save a backup now and then.</div><div class="row wrap" style="gap:8px"><button class="btn sm soft" data-act="backup">Save backup</button><button class="btn sm" data-act="restore">Restore backup</button><button class="btn sm badb" data-act="reset">Reset '+esc(b.name)+' progress</button></div></div>';
-  h+='<div class="foot">'+esc(b.source)+'<br>'+b.q.length+' MCQs · '+b.cards.length+' concept cards</div>';
-  $('#tab-dash').innerHTML=h;
+  h+='<div class="foot span">'+esc(b.source)+'<br>'+b.q.length+' MCQs · '+b.cards.length+' concept cards</div>';
+  $('#tab-dash').innerHTML='<div class="cols">'+h+'</div>';
 }
 function kpi(k,v,d){return '<div class="kpi"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div></div>';}
 /* ---------- PRACTICE ---------- */
@@ -540,7 +578,7 @@ function renderPrac(){
   if(P.view==='search')return renderSearch();
   dock(null);
   const b=B(),n=buildQueue().length;let h='';
-  if(P.queue.length){const q=X().qby[P.queue[P.i]];h+='<div class="card" style="border-color:var(--accent-line)"><div class="small muted" style="font-weight:800">Continue where you left off</div><div style="margin:4px 0 12px;font-weight:700">'+esc(P.label||'Practice set')+' — question '+(P.i+1)+' of '+P.queue.length+'</div><button class="btn primary block" data-act="p-resume">Resume · Q '+q.id+'</button></div>';}
+  if(P.queue.length){const q=X().qby[P.queue[P.i]];h+='<div class="card span" style="border-color:var(--accent-line)"><div class="small muted" style="font-weight:800">Continue where you left off</div><div style="margin:4px 0 12px;font-weight:700">'+esc(P.label||'Practice set')+' — question '+(P.i+1)+' of '+P.queue.length+'</div><button class="btn primary block" data-act="p-resume">Resume · Q '+q.id+'</button></div>';}
   h+='<div class="card"><h3>Practise '+esc(b.name)+' questions</h3><div class="sub">One question at a time. Choose an option, then Submit to see the answer and explanation.</div>';
   h+='<label class="fl">'+esc(b.mword)+'</label><div class="chips"><button data-act="p-mod" data-v="0" class="'+(P.mod===0?'on':'')+'">All · '+b.q.length+'</button>'+X().mods.map(m=>'<button data-act="p-mod" data-v="'+m+'" class="'+(P.mod===m?'on':'')+'">'+mlabel(m)+' · '+X().mc[m]+'</button>').join('')+'</div>';
   if(P.mod)h+='<div class="small muted" style="margin-top:6px">'+esc(b.mods[P.mod])+'</div>';
@@ -550,7 +588,7 @@ function renderPrac(){
   h+='<div class="card"><h3>Search</h3><div class="sub">Keyword or question number</div><form id="sform" class="row" style="gap:8px"><input type="search" id="sinput" placeholder="e.g. firewall, RTO, sampling" value="'+esc(P.search)+'" enterkeyhint="search"><button class="btn primary" type="submit">Go</button></form></div>';
   const bmN=Object.keys(ST().bm).length;
   h+='<div class="card"><div class="row between"><div><h3 style="margin:0">Bookmarks</h3><div class="small muted">'+bmN+' question'+(bmN===1?'':'s')+' saved for later</div></div><button class="btn sm soft" data-act="practise-set" data-set="bm" '+(bmN?'':'disabled')+'>Practise</button></div></div>';
-  $('#tab-prac').innerHTML=h;
+  $('#tab-prac').innerHTML='<div class="cols">'+h+'</div>';
   $('#sform').onsubmit=e=>{e.preventDefault();P.search=$('#sinput').value.trim();if(P.search){P.view='search';renderPrac();window.scrollTo(0,0);}};
 }
 function searchIds(term){
@@ -606,10 +644,13 @@ function renderQ(){
   h+='<article class="card"><div class="qmeta"><span class="chip m">'+mlabel(q.m)+'</span><span class="chip">Q '+q.id+' · '+qref(q)+'</span>'+(r&&r.n?'<span class="hist">'+r.n+'× · '+r.c+' right</span>':'<span class="hist">New</span>')+'<button class="star '+(st.bm[id]?'on':'')+'" data-act="bm" data-id="'+id+'" aria-label="Bookmark">'+(st.bm[id]?'★':'☆')+'</button></div>';
   if(q.cht)h+='<div class="small muted" style="margin:-6px 0 10px">'+esc(q.cht)+'</div>';
   h+='<h2 class="qtext">'+esc(q.q)+'</h2>'+optsHTML(q,state,'p-pick');
-  if(d){h+=d.ok?'<div class="result ok">✔ Correct</div>':'<div class="result bad">✘ Incorrect – the answer is '+L[q.a]+'</div>';h+=explHTML(q);}
+  if(d)h+=d.ok?'<div class="result ok">✔ Correct</div>':'<div class="result bad">✘ Incorrect – the answer is '+L[q.a]+'</div>';
   const hist=(st.log||[]).filter(x=>x[1]===id);
-  if(hist.length)h+='<details style="margin-top:12px"><summary>Your history on this question ('+hist.length+')</summary><div class="row wrap" style="gap:6px;padding-top:6px">'+hist.slice(-20).reverse().map(x=>'<span class="chip '+(x[3]?'ok':'bad')+'">'+(x[3]?'✓ ':'✗ ')+L[x[2]]+' · '+fmtShort(x[0])+(x[4]==='m'?' · mock':'')+'</span>').join('')+'</div></details>';
-  h+='</article>';$('#tab-prac').innerHTML=h;
+  const histH=hist.length?'<details style="margin-top:12px"><summary>Your history on this question ('+hist.length+')</summary><div class="row wrap" style="gap:6px;padding-top:6px">'+hist.slice(-20).reverse().map(x=>'<span class="chip '+(x[3]?'ok':'bad')+'">'+(x[3]?'✓ ':'✗ ')+L[x[2]]+' · '+fmtShort(x[0])+(x[4]==='m'?' · mock':'')+'</span>').join('')+'</div></details>':'';
+  if(!isWide()){if(d)h+=explHTML(q);h+=histH+'</article>';}
+  else{h+='</article>';h='<div class="qtop"><button class="link" data-act="p-setup">‹ Change set</button><span>'+(P.i+1)+' / '+P.queue.length+'</span></div><div class="pbar" style="margin-bottom:14px"><i style="width:'+((P.i+1)/P.queue.length*100)+'%"></i></div><div class="qgrid">'+h.slice(h.indexOf('<article'))+
+    '<aside class="qside">'+(d?'<div class="card">'+explHTML(q)+histH+'</div>':'<div class="card"><div class="empty" style="text-align:left;line-height:1.7">Choose an option and press <b>Submit</b> to see the explanation'+(B().name==='DISA'?' and where the concept is explained in ISA 3.0':'')+'.<br><span class="small">Keyboard: <span class="kbd">A</span>–<span class="kbd">D</span> choose · <span class="kbd">Enter</span> submit / next · <span class="kbd">←</span> <span class="kbd">→</span> move</span></div>'+(histH?histH:'')+'</div>')+'</aside></div>';}
+  $('#tab-prac').innerHTML=h;
   const atEnd=P.i>=P.queue.length-1;
   if(d)dock('<button class="btn nav" data-act="p-prev" '+(P.i?'':'disabled')+'>‹</button><button class="btn" data-act="p-retry">↺ Retry</button><button class="btn primary" data-act="p-next">'+(atEnd?'Finish':'Next ›')+'</button>');
   else dock('<button class="btn nav" data-act="p-prev" '+(P.i?'':'disabled')+'>‹</button><button class="btn primary" data-act="p-submit" '+(P.sel==null?'disabled':'')+'>Submit</button><button class="btn nav" data-act="p-skip" '+(atEnd?'disabled':'')+'>›</button>');
@@ -660,14 +701,18 @@ function renderMock(){
   if(!st.mocks.length)h+='<div class="empty" style="margin-top:10px">No tests taken yet.</div>';
   else{h+='<div style="margin-top:10px">'+lineSVG(st.mocks.slice(-14).map(m=>({label:lbl(dk(new Date(m.t))),v:m.c/m.n,n:m.n})),'')+'</div>';
     h+='<div style="margin-top:8px">'+st.mocks.map((m,i)=>({m,i})).reverse().slice(0,30).map(({m,i})=>'<div class="hist-row"><div style="min-width:0"><div style="font-weight:700">'+fmtDT(m.t)+'</div><div class="small muted">'+m.n+' Qs · '+(m.mod?mlabel(m.mod):'All')+' · '+fmtClock(m.dur)+'</div></div><div class="row" style="gap:8px"><span class="acc '+accCls(m.c/m.n)+'" style="font-size:1.05rem">'+pct(m.c/m.n)+'</span>'+(m.ids?'<button class="btn sm" data-act="m-open" data-i="'+i+'">View</button>':'')+'</div></div>').join('')+'</div>';}
-  h+='</div>';$('#tab-mock').innerHTML=h;
+  h+='</div>';$('#tab-mock').innerHTML='<div class="grid2">'+h+'</div>';
 }
 function renderMockRun(){
   const r=ST().run;const id=r.ids[r.i];const q=X().qby[id];const answered=Object.keys(r.ans).length;
-  let h='<div class="mockbar"><span class="small"><b>Q '+(r.i+1)+'</b> / '+r.ids.length+'</span><span class="timer" id="mtimer">⏱ '+fmtClock(mockRemaining())+'</span><button class="btn sm soft" data-act="m-pal">'+(M.pal?'Close':'All Qs')+'</button></div>';
-  if(M.pal)h+='<div class="card"><div class="legend"><span><i style="background:var(--accent-soft);border-color:var(--accent-line)"></i>Answered '+answered+'</span><span><i></i>Unanswered '+(r.ids.length-answered)+'</span><span><i style="background:var(--warn);border-radius:50%"></i>Flagged</span></div><div class="palette">'+r.ids.map((x,i)=>'<button data-act="m-jump" data-i="'+i+'" class="'+(r.ans[x]!=null?'ans ':'')+(r.flag[x]?'flag ':'')+(i===r.i?'cur':'')+'">'+(i+1)+'</button>').join('')+'</div><button class="btn primary block" data-act="m-submit">Submit test</button></div>';
-  h+='<article class="card"><div class="qmeta"><span class="chip m">'+mlabel(q.m)+'</span><span class="chip">Q '+q.id+'</span>'+(r.flag[id]?'<span class="chip warn">Flagged</span>':'')+'</div><h2 class="qtext">'+esc(q.q)+'</h2>'+optsHTML(q,{sel:r.ans[id],submitted:false},'m-pick')+'</article>';
-  h+='<div class="row between"><button class="btn sm" data-act="m-flag">'+(r.flag[id]?'⚑ Remove flag':'⚐ Flag for review')+'</button><button class="btn sm" data-act="m-submit">Submit test</button></div>';
+  const W=isWide();
+  let h='<div class="mockbar"><span class="small"><b>Q '+(r.i+1)+'</b> / '+r.ids.length+'</span><span class="timer" id="mtimer">⏱ '+fmtClock(mockRemaining())+'</span>'+(W?'<span class="small muted">'+answered+' answered</span>':'<button class="btn sm soft" data-act="m-pal">'+(M.pal?'Close':'All Qs')+'</button>')+'</div>';
+  let pal='';
+  if(M.pal||W)pal='<div class="card"><div class="legend"><span><i style="background:var(--accent-soft);border-color:var(--accent-line)"></i>Answered '+answered+'</span><span><i></i>Unanswered '+(r.ids.length-answered)+'</span><span><i style="background:var(--warn);border-radius:50%"></i>Flagged</span></div><div class="palette">'+r.ids.map((x,i)=>'<button data-act="m-jump" data-i="'+i+'" class="'+(r.ans[x]!=null?'ans ':'')+(r.flag[x]?'flag ':'')+(i===r.i?'cur':'')+'">'+(i+1)+'</button>').join('')+'</div><button class="btn primary block" data-act="m-submit">Submit test</button></div>';
+  if(!W)h+=pal;
+  let qh='<article class="card"><div class="qmeta"><span class="chip m">'+mlabel(q.m)+'</span><span class="chip">Q '+q.id+'</span>'+(r.flag[id]?'<span class="chip warn">Flagged</span>':'')+'</div><h2 class="qtext">'+esc(q.q)+'</h2>'+optsHTML(q,{sel:r.ans[id],submitted:false},'m-pick')+'</article>';
+  qh+='<div class="row between" style="margin-top:'+(W?'12px':'0')+'"><button class="btn sm" data-act="m-flag">'+(r.flag[id]?'⚑ Remove flag':'⚐ Flag for review')+'</button><button class="btn sm" data-act="m-submit">Submit test</button></div>';
+  h+=W?'<div class="qgrid"><div>'+qh+'</div><aside class="qside">'+pal+'</aside></div>':qh;
   $('#tab-mock').innerHTML=h;
   const atEnd=r.i>=r.ids.length-1;
   dock('<button class="btn nav" data-act="m-prev" '+(r.i?'':'disabled')+'>‹ Prev</button>'+(atEnd?'<button class="btn primary" data-act="m-submit">Finish & submit</button>':'<button class="btn primary" data-act="m-next">Next ›</button>'));
@@ -675,8 +720,8 @@ function renderMockRun(){
 function renderMockResult(){
   dock('<button class="btn" data-act="m-setup">Back</button><button class="btn soft" data-act="m-pdf">⬇ PDF</button><button class="btn primary" data-act="m-again">New test</button>');
   const R=M.res,b=B();const sc=R.c/R.n;const per=perModule(R);
-  let h='<div class="card" style="text-align:center"><div class="small muted" style="font-weight:800">'+esc(b.name)+' mock test · '+fmtDT(R.t)+'</div><div class="score acc '+accCls(sc)+'" style="margin-top:6px">'+pct(sc)+'</div><div style="margin:6px 0 14px">'+R.c+' of '+R.n+' correct</div><div class="row wrap" style="justify-content:center;gap:6px"><span class="chip ok">✓ '+R.c+' right</span><span class="chip bad">✗ '+R.w+' wrong</span><span class="chip">– '+R.u+' unanswered</span><span class="chip">⏱ '+fmtClock(R.dur)+' of '+fmtClock(R.lim)+'</span></div><button class="btn soft block" style="margin-top:16px" data-act="m-pdf">⬇ Export result as PDF</button></div>';
-  h+='<div class="card"><h3>By '+esc(b.mword.toLowerCase())+'</h3>'+Object.keys(per).sort((a,c)=>a-c).map(m=>{const p=per[m];return '<div class="mrow"><div class="row between"><div class="mname"><span class="chip m" style="margin-right:6px">'+mlabel(m)+'</span>'+esc(b.mshort[m])+'</div><div class="acc '+accCls(p.c/p.n)+'">'+p.c+'/'+p.n+'</div></div></div>';}).join('')+'</div>';
+  let h='<div class="grid2"><div class="card" style="text-align:center"><div class="small muted" style="font-weight:800">'+esc(b.name)+' mock test · '+fmtDT(R.t)+'</div><div class="score acc '+accCls(sc)+'" style="margin-top:6px">'+pct(sc)+'</div><div style="margin:6px 0 14px">'+R.c+' of '+R.n+' correct</div><div class="row wrap" style="justify-content:center;gap:6px"><span class="chip ok">✓ '+R.c+' right</span><span class="chip bad">✗ '+R.w+' wrong</span><span class="chip">– '+R.u+' unanswered</span><span class="chip">⏱ '+fmtClock(R.dur)+' of '+fmtClock(R.lim)+'</span></div><button class="btn soft block" style="margin-top:16px" data-act="m-pdf">⬇ Export result as PDF</button></div>';
+  h+='<div class="card"><h3>By '+esc(b.mword.toLowerCase())+'</h3>'+Object.keys(per).sort((a,c)=>a-c).map(m=>{const p=per[m];return '<div class="mrow"><div class="row between"><div class="mname"><span class="chip m" style="margin-right:6px">'+mlabel(m)+'</span>'+esc(b.mshort[m])+'</div><div class="acc '+accCls(p.c/p.n)+'">'+p.c+'/'+p.n+'</div></div></div>';}).join('')+'</div></div>';
   const list=R.ids.filter(id=>{const ch=R.ans[id];const q=X().qby[id];if(!q)return false;if(M.filter==='wrong')return ch!=null&&ch!==q.a;if(M.filter==='un')return ch==null;return true;});
   h+='<div class="card"><h3>Review answers</h3><div class="seg" style="margin:10px 0 8px"><button data-act="m-rf" data-v="all" class="'+(M.filter==='all'?'on':'')+'">All '+R.n+'</button><button data-act="m-rf" data-v="wrong" class="'+(M.filter==='wrong'?'on':'')+'">Wrong '+R.w+'</button><button data-act="m-rf" data-v="un" class="'+(M.filter==='un'?'on':'')+'">Skipped '+R.u+'</button></div>';
   if(!list.length)h+='<div class="empty">Nothing to show here.</div>';
@@ -893,7 +938,7 @@ document.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();const idx='abcd'.indexOf(k)>=0?'abcd'.indexOf(k):'1234'.indexOf(k);const st=ST();
   if(TAB==='prac'&&P.view==='q'){const id=P.queue[P.i];const d=P.done[id];
     if(idx>=0&&!d&&X().qby[id].o[idx]){P.sel=idx;renderQ();}
-    else if(k==='enter'){e.preventDefault();if(d)(P.i>=P.queue.length-1?pFinish():pMove(1));else if(P.sel!=null){const ok=record(id,P.sel);P.done[id]={sel:P.sel,ok};P.sel=null;renderQ();}}
+    else if(k==='enter'){e.preventDefault();if(d)(P.i>=P.queue.length-1?pFinish():pMove(1));else if(P.sel!=null){const ok=record(id,P.sel,'p');P.done[id]={sel:P.sel,ok};P.sel=null;renderQ();}}
     else if(k==='arrowright')pMove(1);else if(k==='arrowleft')pMove(-1);}
   else if(TAB==='mock'&&st.run){const r=st.run;const id=r.ids[r.i];
     if(idx>=0&&X().qby[id].o[idx]){r.ans[id]=idx;save();renderMockRun();}
