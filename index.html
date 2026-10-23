@@ -268,7 +268,7 @@ details summary::-webkit-details-marker{display:none}
 .qside .card{margin-bottom:14px}
 .qside .expl{margin-top:0}
 .kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 6px;font-size:.74rem;font-weight:800;color:var(--ink2);background:var(--card)}
-@media(min-width:900px){
+/* wide (desktop) layout - applied by JS via data-lay="wide" */
   html[data-lay="wide"] .bar{max-width:1280px;padding:12px 28px 6px}
   html[data-lay="wide"] .tabs{max-width:1280px;padding:4px 24px 10px;justify-content:flex-start}
   html[data-lay="wide"] .tabs button{flex:0 0 auto;padding:9px 20px}
@@ -295,7 +295,6 @@ details summary::-webkit-details-marker{display:none}
   html[data-lay="wide"] .ftext{font-size:1.5rem}
   html[data-lay="wide"] .btext{font-size:1.02rem}
   html[data-lay="wide"] .mockbar{top:var(--hh,120px)}
-}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 /* ---------- print report ---------- */
 @media print{
@@ -435,13 +434,14 @@ function applyUI(){
   const h=document.documentElement;
   if(S.ui.theme)h.setAttribute('data-theme',S.ui.theme);else h.removeAttribute('data-theme');
   if(S.ui.fs)h.setAttribute('data-fs',S.ui.fs);else h.removeAttribute('data-fs');
-  if(S.ui.lay==='wide')h.setAttribute('data-lay','wide');else h.removeAttribute('data-lay');
+  if(isWide())h.setAttribute('data-lay','wide');else h.removeAttribute('data-lay');
   document.querySelectorAll('.bankseg button').forEach(b=>b.classList.toggle('on',b.dataset.bank===BK));
   $('#logo').textContent=BK==='disa'?'D':'C';
   $('#bankSub').textContent='by CA Onil Shah';
   requestAnimationFrame(()=>h.style.setProperty('--hh',($('#appbar').offsetHeight+8)+'px'));
 }
-const isWide=()=>S.ui.lay==='wide'&&innerWidth>=900;
+function layNote(){const l=S.ui.lay||'';return l==='phone'?'Always uses the single-column phone layout, whatever the screen size.':l==='wide'?'Uses the two-column desktop layout on any screen at least 700 px wide (laptop, desktop or tablet); narrower screens keep the phone layout.':'Picks the layout automatically: desktop (two columns) on screens at least 900 px wide, phone layout on smaller screens. It switches by itself when the window is resized or the device is rotated.';}
+function isWide(){const l=S.ui.lay||'';return l==='phone'?false:l==='wide'?innerWidth>=700:innerWidth>=900;}
 let lastWide=null;
 addEventListener('resize',()=>{applyUI();const w=isWide();if(lastWide!==null&&w!==lastWide)render();lastWide=w;});
 let toastT;
@@ -480,15 +480,15 @@ $('#btnSet').onclick=()=>{
   const th=S.ui.theme,fs=S.ui.fs,lay=S.ui.lay||'';
   modal('Settings','<label class="fl" style="margin-top:4px">Theme</label><div class="seg" id="setTheme"><button data-v="" class="'+(th===''?'on':'')+'">Auto</button><button data-v="light" class="'+(th==='light'?'on':'')+'">Light</button><button data-v="dark" class="'+(th==='dark'?'on':'')+'">Dark</button></div>'+
    '<label class="fl">Text size</label><div class="seg" id="setFs"><button data-v="" class="'+(fs===''?'on':'')+'">Normal</button><button data-v="l" class="'+(fs==='l'?'on':'')+'">Large</button><button data-v="xl" class="'+(fs==='xl'?'on':'')+'">Extra large</button></div>'+
-   '<label class="fl">Layout</label><div class="seg" id="setLay"><button data-v="" class="'+(lay===''?'on':'')+'">📱 Phone</button><button data-v="wide" class="'+(lay==='wide'?'on':'')+'">💻 Desktop (landscape)</button></div>'+
-   '<div class="small muted" id="layNote" style="margin-top:6px">'+(innerWidth<900?'Desktop layout takes effect on screens at least 900 px wide (laptop or tablet in landscape). This screen keeps the phone layout.':'Desktop uses the full width: two-column dashboard, question and explanation side by side, and the question palette always visible in mock tests.')+'</div>'+
+   '<label class="fl">Layout</label><div class="seg" id="setLay"><button data-v="" class="'+(lay===''?'on':'')+'">✨ Auto</button><button data-v="phone" class="'+(lay==='phone'?'on':'')+'">📱 Phone</button><button data-v="wide" class="'+(lay==='wide'?'on':'')+'">💻 Desktop</button></div>'+
+   '<div class="small muted" id="layNote" style="margin-top:6px">'+layNote()+'</div>'+
    '<label class="fl">Name on PDF reports</label><input type="text" id="setName" placeholder="e.g. CA Onil Shah" value="'+esc(S.name||'')+'">'+
    (isStandalone()?'<p class="small muted" style="margin:14px 0 0">✓ Running as an installed app.</p>':'<button class="btn soft block" style="margin-top:16px" data-act="install">Install app on this device</button>')+
    '<p class="small muted" style="margin:14px 0 0">DISA Prep Simulator by CA Onil Shah</p>',
    [{label:'Done',cls:'primary',fn:()=>{S.name=$('#setName').value.trim();save();}}]);
   $('#setTheme').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.ui.theme=b.dataset.v;applyUI();save();$('#setTheme').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));};
   $('#setFs').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.ui.fs=b.dataset.v;applyUI();save();$('#setFs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));};
-  $('#setLay').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.ui.lay=b.dataset.v;applyUI();save();lastWide=isWide();render();$('#setLay').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));};
+  $('#setLay').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.ui.lay=b.dataset.v;applyUI();save();lastWide=isWide();render();$('#setLay').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));const n=$('#layNote');if(n)n.textContent=layNote();};
 };
 /* ---------- charts ---------- */
 function lineSVG(pts,empty){
