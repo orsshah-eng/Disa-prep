@@ -483,7 +483,7 @@ $('#btnSet').onclick=()=>{
    '<label class="fl">Layout</label><div class="seg" id="setLay"><button data-v="" class="'+(lay===''?'on':'')+'">📱 Phone</button><button data-v="wide" class="'+(lay==='wide'?'on':'')+'">💻 Desktop (landscape)</button></div>'+
    '<div class="small muted" id="layNote" style="margin-top:6px">'+(innerWidth<900?'Desktop layout takes effect on screens at least 900 px wide (laptop or tablet in landscape). This screen keeps the phone layout.':'Desktop uses the full width: two-column dashboard, question and explanation side by side, and the question palette always visible in mock tests.')+'</div>'+
    '<label class="fl">Name on PDF reports</label><input type="text" id="setName" placeholder="e.g. CA Onil Shah" value="'+esc(S.name||'')+'">'+
-   (isStandalone()?'<p class="small muted" style="margin:14px 0 0">✓ Running as an installed app.</p>':'<button class="btn soft block" style="margin-top:16px" data-act="install">Install app on this phone</button>')+
+   (isStandalone()?'<p class="small muted" style="margin:14px 0 0">✓ Running as an installed app.</p>':'<button class="btn soft block" style="margin-top:16px" data-act="install">Install app on this device</button>')+
    '<p class="small muted" style="margin:14px 0 0">DISA Prep Simulator by CA Onil Shah</p>',
    [{label:'Done',cls:'primary',fn:()=>{S.name=$('#setName').value.trim();save();}}]);
   $('#setTheme').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.ui.theme=b.dataset.v;applyUI();save();$('#setTheme').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));};
@@ -560,7 +560,7 @@ function renderDash(){
     '<div class="mini"><div><b>'+td.a+'</b><span>Answered today</span></div><div><b>'+st.mocks.length+'</b><span>Mock tests</span></div><div><b>'+td.f+'</b><span>Cards today</span></div></div></div>';
   let k=0,rv=0;b.cards.forEach(c=>{const f=st.fc[c.id];if(f&&f.s==='k')k++;else if(f&&f.s==='r')rv++;});const un=b.cards.length-k-rv;
   h+='<div class="card"><div class="row between"><h3 style="margin:0">Concept flashcards</h3><button class="link" data-act="goto" data-v="fc">Open ›</button></div><div class="dist" style="margin-top:12px"><i style="width:'+(k/b.cards.length*100)+'%;background:var(--ok)"></i><i style="width:'+(rv/b.cards.length*100)+'%;background:var(--bad)"></i></div><div class="leg2"><span><i style="background:var(--ok)"></i>Known · '+k+'</span><span><i style="background:var(--bad)"></i>To revise · '+rv+'</span><span>Not seen · '+un+' of '+b.cards.length+'</span></div></div>';
-  h+='<div class="card"><h3>Your data</h3><div class="sub">Progress for both banks is saved in this browser on this phone. Save a backup now and then.</div><div class="row wrap" style="gap:8px"><button class="btn sm soft" data-act="backup">Save backup</button><button class="btn sm" data-act="restore">Restore backup</button><button class="btn sm badb" data-act="reset">Reset '+esc(b.name)+' progress</button></div></div>';
+  h+='<div class="card"><h3>Your data</h3><div class="sub">Progress for both banks is saved in this browser on this device. Save a backup now and then.</div><div class="row wrap" style="gap:8px"><button class="btn sm soft" data-act="backup">Save backup</button><button class="btn sm" data-act="restore">Restore backup</button><button class="btn sm badb" data-act="reset">Reset '+esc(b.name)+' progress</button></div></div>';
   h+='<div class="foot span">'+esc(b.source)+'<br>'+b.q.length+' MCQs · '+b.cards.length+' concept cards</div>';
   $('#tab-dash').innerHTML='<div class="cols">'+h+'</div>';
 }
@@ -835,7 +835,7 @@ function dayRows(){
 const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 function renderLog(){
   dock(null);const st=ST(),b=B();const log=st.log||[];
-  let h='<div class="card"><h3>Study log & history</h3><div class="sub">'+esc(b.name)+' bank · saved inside the app on this phone</div><div class="seg"><button data-act="lg-v" data-v="daily" class="'+(LG.view==='daily'?'on':'')+'">Daily log</button><button data-act="lg-v" data-v="ans" class="'+(LG.view==='ans'?'on':'')+'">Answers</button><button data-act="lg-v" data-v="mock" class="'+(LG.view==='mock'?'on':'')+'">Mock tests</button></div></div>';
+  let h='<div class="card"><h3>Study log & history</h3><div class="sub">'+esc(b.name)+' bank · saved inside the app on this device</div><div class="seg"><button data-act="lg-v" data-v="daily" class="'+(LG.view==='daily'?'on':'')+'">Daily log</button><button data-act="lg-v" data-v="ans" class="'+(LG.view==='ans'?'on':'')+'">Answers</button><button data-act="lg-v" data-v="mock" class="'+(LG.view==='mock'?'on':'')+'">Mock tests</button></div></div>';
   if(LG.view==='daily'){
     const rows=dayRows();let ta=0,tc=0,ts=0,tf=0;rows.forEach(r=>{ta+=r.a;tc+=r.c;ts+=r.s;tf+=r.f;});
     h+='<div class="kpis">'+kpi('Study days',rows.length,'with activity')+kpi('Answers',ta,ta?pct(tc/ta)+' accuracy':'–')+kpi('Time',fmtMin(ts),'in '+b.name)+kpi('Cards',tf,'reviewed')+'</div>';
@@ -897,7 +897,7 @@ document.addEventListener('click',e=>{
     case 'open-q':startQueue([+el.dataset.id],'Single question · Q '+el.dataset.id);break;
     case 'backup':doBackup();break;
     case 'restore':$('#restoreFile').click();break;
-    case 'reset':modal('Reset '+B().name+' progress?','<p class="muted">This permanently clears every '+esc(B().name)+' answer, mock test, flashcard mark and bookmark on this phone. Study-time records are kept. Consider saving a backup first.</p>',[{label:'Cancel'},{label:'Reset',cls:'badb',fn:()=>{S.b[BK]=bankBlank();saveNow();resetBankViews();toast(B().name+' progress cleared');render();}}]);break;
+    case 'reset':modal('Reset '+B().name+' progress?','<p class="muted">This permanently clears every '+esc(B().name)+' answer, mock test, flashcard mark and bookmark on this device. Study-time records are kept. Consider saving a backup first.</p>',[{label:'Cancel'},{label:'Reset',cls:'badb',fn:()=>{S.b[BK]=bankBlank();saveNow();resetBankViews();toast(B().name+' progress cleared');render();}}]);break;
     case 'p-mod':P.mod=+v;renderPrac();break;
     case 'p-order':P.order=v;renderPrac();break;
     case 'p-start':{setLabel();const ids=buildQueue();if(ids.length)startQueue(ids,P.label);break;}
@@ -982,7 +982,7 @@ $('#restoreFile').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;const rd=new FileReader();
   rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o||(o.v!==1&&o.v!==2))throw 0;const n=migrate(o);
       const cnt=Object.values(n.b).reduce((a,x)=>a+Object.keys(x.q).length,0);
-      modal('Restore this backup?','<p class="muted">It contains '+cnt+' answered questions across both banks. Your current progress on this phone will be replaced.</p>',[{label:'Cancel'},{label:'Restore',cls:'primary',fn:()=>{S=n;BK=DATA[S.cur]?S.cur:'disa';saveNow();applyUI();resetBankViews();toast('Backup restored');render();}}]);
+      modal('Restore this backup?','<p class="muted">It contains '+cnt+' answered questions across both banks. Your current progress on this device will be replaced.</p>',[{label:'Cancel'},{label:'Restore',cls:'primary',fn:()=>{S=n;BK=DATA[S.cur]?S.cur:'disa';saveNow();applyUI();resetBankViews();toast('Backup restored');render();}}]);
     }catch(err){toast('That file is not a valid progress backup');}e.target.value='';};
   rd.readAsText(f);
 });
