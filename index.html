@@ -108,7 +108,13 @@ select:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);ou
 .chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;min-height:36px;padding:0 14px;font-size:.84rem;font-weight:700;cursor:pointer;color:var(--ink2)}
 .chips button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .mlist{display:flex;flex-direction:column;gap:6px}
-.mlist .mg{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 2px 0}
+.mlist .mgb{display:flex;flex-direction:column;gap:6px;padding-left:10px;border-left:2px solid var(--accent-line);margin-left:6px}
+.mgh{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid var(--line);background:var(--chip);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--ink);font:inherit;margin-top:4px}
+.mgh .ar{flex:none;display:inline-block;transition:transform .15s;color:var(--accent);font-size:.8rem}
+.mgh.open .ar{transform:rotate(90deg)}
+.mgh .mgt{flex:1;min-width:0;font-size:.74rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);line-height:1.35}
+.mgh .mgc{flex:none;font-size:.76rem;font-weight:700;color:var(--muted)}
+.mgh .mgsel{color:var(--accent)}
 .mli{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;cursor:pointer;color:var(--ink);font:inherit;min-height:44px}
 .mli .mc{flex:none;min-width:62px;font-size:.76rem;font-weight:800;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 9px;text-align:center}
 .mli .mn{flex:1;min-width:0;font-size:.88rem;font-weight:600;line-height:1.3}
@@ -392,9 +398,13 @@ function fmtMin(s){const m=Math.round(s/60);if(m<60)return m+' min';return Math.
 function fmtClock(s){s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0');}
 function accCls(v){return v>=.8?'hi':v>=.6?'mid':'lo';}
 function modList(act,sel){const b=B(),X_=X();let h='<div class="mlist"><button data-act="'+act+'" data-v="0" class="mli all'+(sel===0?' on':'')+'"><span class="mc">All</span><span class="mn">All '+esc(b.mword.toLowerCase())+'s</span><span class="mq">'+b.q.length+'</span></button>';
-  let grp=null;X_.mods.forEach(m=>{const isa=!!(b.mlab&&b.mlab[m]);if(b.mlab){const g=isa?'ISA 3.0 Background Material · end-of-chapter MCQs':'ICAI DISA Review Questions Manual';if(g!==grp){grp=g;h+='<div class="mg">'+g+'</div>';}}
-    const nm=String(b.mshort[m]||b.mods[m]||'').replace(/^ISA 3\.0 · /,'');
-    h+='<button data-act="'+act+'" data-v="'+m+'" class="mli'+(sel===m?' on':'')+'"><span class="mc">'+esc(mlabel(m))+'</span><span class="mn">'+esc(nm)+'</span><span class="mq">'+X_.mc[m]+'</span></button>';});
+  const row=m=>{const nm=String(b.mshort[m]||b.mods[m]||'').replace(/^ISA 3\.0 · /,'');return '<button data-act="'+act+'" data-v="'+m+'" class="mli'+(sel===m?' on':'')+'"><span class="mc">'+esc(mlabel(m))+'</span><span class="mn">'+esc(nm)+'</span><span class="mq">'+X_.mc[m]+'</span></button>';};
+  if(!b.mlab)return h+X_.mods.map(row).join('')+'</div>';
+  const G=[{k:'man',t:'DISA Review Questions Manual',ms:X_.mods.filter(m=>!b.mlab[m])},{k:'isa',t:'ISA 3.0 Background Material',ms:X_.mods.filter(m=>b.mlab[m])}];
+  S.ui.mgo=S.ui.mgo||{};
+  G.forEach(g=>{if(!g.ms.length)return;const has=g.ms.includes(sel);const open=S.ui.mgo[g.k]===undefined?has:!!S.ui.mgo[g.k];const tot=g.ms.reduce((a,m)=>a+(X_.mc[m]||0),0);
+    h+='<button class="mgh'+(open?' open':'')+'" data-act="mg-tog" data-v="'+g.k+'" aria-expanded="'+open+'"><span class="ar">▸</span><span class="mgt">'+g.t+'</span><span class="mgc">'+(has&&!open?'<b class="mgsel">'+esc(mlabel(sel))+' selected</b>':g.ms.length+' modules · '+tot)+'</span></button>';
+    if(open)h+='<div class="mgb">'+g.ms.map(row).join('')+'</div>';});
   return h+'</div>';}
 function mlabel(m){const b=B();return (b.mlab&&b.mlab[m])||b.mprefix+m;}
 /* ---------- storage ---------- */
@@ -912,6 +922,7 @@ document.addEventListener('click',e=>{
     case 'restore':$('#restoreFile').click();break;
     case 'reset':modal('Reset '+B().name+' progress?','<p class="muted">This permanently clears every '+esc(B().name)+' answer, mock test, flashcard mark and bookmark on this device. Study-time records are kept. Consider saving a backup first.</p>',[{label:'Cancel'},{label:'Reset',cls:'badb',fn:()=>{S.b[BK]=bankBlank();saveNow();resetBankViews();toast(B().name+' progress cleared');render();}}]);break;
     case 'p-mod':P.mod=+v;renderPrac();break;
+    case 'mg-tog':{S.ui.mgo=S.ui.mgo||{};const el=e&&e.target?e.target.closest('.mgh'):null;const isOpen=el?el.classList.contains('open'):!!S.ui.mgo[v];S.ui.mgo[v]=!isOpen;save();render();break;}
     case 'p-order':P.order=v;renderPrac();break;
     case 'p-start':{setLabel();const ids=buildQueue();if(ids.length)startQueue(ids,P.label);break;}
     case 'p-resume':P.view='q';P.sel=null;renderPrac();window.scrollTo(0,0);break;
