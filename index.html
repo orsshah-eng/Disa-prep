@@ -61,7 +61,7 @@ button,input,select{font:inherit;color:inherit}
 /* header */
 .appbar{position:sticky;top:0;z-index:20;background:var(--hdr);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);padding-top:env(safe-area-inset-top);border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:10px;max-width:760px;margin:0 auto;padding:10px 16px 6px}
-.logo{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:.95rem;flex:none}
+.logo{display:block;width:42px;height:42px;border-radius:12px;flex:none;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .brand{flex:1;min-width:0}
 .t1{font-weight:800;font-size:.98rem;line-height:1.2;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .t2{font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -344,7 +344,7 @@ details summary::-webkit-details-marker{display:none}
 <body>
 <header class="appbar" id="appbar">
   <div class="bar">
-    <div class="logo" id="logo">D</div>
+    <img class="logo" id="logo" src="icons/icon-192.png" alt="DISA Prep">
     <div class="brand"><div class="t1">DISA Prep Simulator</div><div class="t2" id="bankSub"></div></div>
     <div class="bankseg" role="tablist" aria-label="Question bank"><button data-bank="disa">DISA</button><button data-bank="cisa">CISA</button></div>
     <button class="icbtn" id="btnSet" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
@@ -460,7 +460,6 @@ function applyUI(){
   if(S.ui.fs)h.setAttribute('data-fs',S.ui.fs);else h.removeAttribute('data-fs');
   if(isWide())h.setAttribute('data-lay','wide');else h.removeAttribute('data-lay');
   document.querySelectorAll('.bankseg button').forEach(b=>b.classList.toggle('on',b.dataset.bank===BK));
-  $('#logo').textContent=BK==='disa'?'D':'C';
   $('#bankSub').textContent='by CA Onil Shah';
   requestAnimationFrame(()=>h.style.setProperty('--hh',($('#appbar').offsetHeight+8)+'px'));
 }
