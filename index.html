@@ -107,6 +107,15 @@ select:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);ou
 .chips::-webkit-scrollbar{display:none}
 .chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;min-height:36px;padding:0 14px;font-size:.84rem;font-weight:700;cursor:pointer;color:var(--ink2)}
 .chips button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mlist{display:flex;flex-direction:column;gap:6px}
+.mlist .mg{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 2px 0}
+.mli{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;cursor:pointer;color:var(--ink);font:inherit;min-height:44px}
+.mli .mc{flex:none;min-width:62px;font-size:.76rem;font-weight:800;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 9px;text-align:center}
+.mli .mn{flex:1;min-width:0;font-size:.88rem;font-weight:600;line-height:1.3}
+.mli .mq{flex:none;font-size:.8rem;font-weight:800;color:var(--muted)}
+.mli.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.mli.on .mc{background:var(--accent);color:var(--accent-ink)}
+.mli.on .mq{color:var(--accent)}
 /* dashboard */
 .hero{background:linear-gradient(140deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#a855f7));color:#fff;border:0}
 .hero .muted{color:rgba(255,255,255,.8)}
@@ -382,6 +391,11 @@ function fmtShort(t){const d=new Date(t);return d.getDate()+' '+MON[d.getMonth()
 function fmtMin(s){const m=Math.round(s/60);if(m<60)return m+' min';return Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min';}
 function fmtClock(s){s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0');}
 function accCls(v){return v>=.8?'hi':v>=.6?'mid':'lo';}
+function modList(act,sel){const b=B(),X_=X();let h='<div class="mlist"><button data-act="'+act+'" data-v="0" class="mli all'+(sel===0?' on':'')+'"><span class="mc">All</span><span class="mn">All '+esc(b.mword.toLowerCase())+'s</span><span class="mq">'+b.q.length+'</span></button>';
+  let grp=null;X_.mods.forEach(m=>{const isa=!!(b.mlab&&b.mlab[m]);if(b.mlab){const g=isa?'ISA 3.0 Background Material · end-of-chapter MCQs':'ICAI DISA Review Questions Manual';if(g!==grp){grp=g;h+='<div class="mg">'+g+'</div>';}}
+    const nm=String(b.mshort[m]||b.mods[m]||'').replace(/^ISA 3\.0 · /,'');
+    h+='<button data-act="'+act+'" data-v="'+m+'" class="mli'+(sel===m?' on':'')+'"><span class="mc">'+esc(mlabel(m))+'</span><span class="mn">'+esc(nm)+'</span><span class="mq">'+X_.mc[m]+'</span></button>';});
+  return h+'</div>';}
 function mlabel(m){const b=B();return (b.mlab&&b.mlab[m])||b.mprefix+m;}
 /* ---------- storage ---------- */
 const KEY='disa_mcq_progress_v1';
@@ -586,8 +600,7 @@ function renderPrac(){
   const b=B(),n=buildQueue().length;let h='';
   if(P.queue.length){const q=X().qby[P.queue[P.i]];h+='<div class="card span" style="border-color:var(--accent-line)"><div class="small muted" style="font-weight:800">Continue where you left off</div><div style="margin:4px 0 12px;font-weight:700">'+esc(P.label||'Practice set')+' — question '+(P.i+1)+' of '+P.queue.length+'</div><button class="btn primary block" data-act="p-resume">Resume · Q '+q.id+'</button></div>';}
   h+='<div class="card"><h3>Practise '+esc(b.name)+' questions</h3><div class="sub">One question at a time. Choose an option, then Submit to see the answer and explanation.</div>';
-  h+='<label class="fl">'+esc(b.mword)+'</label><div class="chips"><button data-act="p-mod" data-v="0" class="'+(P.mod===0?'on':'')+'">All · '+b.q.length+'</button>'+X().mods.map(m=>'<button data-act="p-mod" data-v="'+m+'" class="'+(P.mod===m?'on':'')+'">'+mlabel(m)+' · '+X().mc[m]+'</button>').join('')+'</div>';
-  if(P.mod)h+='<div class="small muted" style="margin-top:6px">'+esc(b.mods[P.mod])+'</div>';
+  h+='<label class="fl">'+esc(b.mword)+'</label>'+modList('p-mod',P.mod);
   h+='<label class="fl">Show</label><select data-act="p-filter">'+Object.keys(FILTERS).map(k=>'<option value="'+k+'" '+(P.filter===k?'selected':'')+'>'+FILTERS[k]+'</option>').join('')+'</select>';
   h+='<label class="fl">Order</label><div class="seg"><button data-act="p-order" data-v="seq" class="'+(P.order==='seq'?'on':'')+'">In order</button><button data-act="p-order" data-v="shuf" class="'+(P.order==='shuf'?'on':'')+'">Shuffled</button></div>';
   h+='<button class="btn primary block" style="margin-top:18px" data-act="p-start" '+(n?'':'disabled')+'>'+(n?'Start · '+n+' question'+(n===1?'':'s'):'No questions match this selection')+'</button></div>';
@@ -710,9 +723,9 @@ function renderMock(){
   dock(null);const b=B(),st=ST();
   let h='<div class="card"><h3>Timed mock test</h3><div class="sub">Random '+esc(b.name)+' questions at about '+(b.secPerQ/60).toFixed(b.secPerQ%60?1:0)+' min each. Answers are revealed after you submit.</div>';
   h+='<label class="fl">Number of questions</label><div class="seg">'+b.mockSizes.map(n=>'<button data-act="m-n" data-v="'+n+'" class="'+(M.n===n?'on':'')+'">'+n+'</button>').join('')+'</div>';
-  h+='<label class="fl">'+esc(b.mword)+'</label><div class="chips"><button data-act="m-mod" data-v="0" class="'+(M.mod===0?'on':'')+'">All</button>'+X().mods.map(m=>'<button data-act="m-mod" data-v="'+m+'" class="'+(M.mod===m?'on':'')+'">'+mlabel(m)+'</button>').join('')+'</div>';
+  h+='<label class="fl">'+esc(b.mword)+'</label>'+modList('m-mod',M.mod);
   const n=Math.min(M.n,M.mod?X().mc[M.mod]:b.q.length);
-  if(M.mod)h+='<div class="small muted" style="margin-top:6px">'+esc(b.mods[M.mod])+(X().mc[M.mod]<M.n?' – only '+X().mc[M.mod]+' questions available':'')+'</div>';
+  if(M.mod&&X().mc[M.mod]<M.n)h+='<div class="small muted" style="margin-top:6px">Only '+X().mc[M.mod]+' questions available in '+esc(mlabel(M.mod))+'.</div>';
   h+='<div class="row between" style="margin-top:16px;background:var(--chip);border-radius:14px;padding:11px 14px"><span class="small"><b>'+n+'</b> questions</span><span class="small">Time limit <b>'+fmtClock(n*b.secPerQ)+'</b></span></div>';
   h+='<button class="btn primary block" style="margin-top:14px" data-act="m-start">Start test</button></div>';
   h+='<div class="card"><h3>Previous tests</h3>';
