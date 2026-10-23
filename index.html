@@ -258,6 +258,10 @@ details summary::-webkit-details-marker{display:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .banner{background:var(--warnbg);color:var(--warn);border-radius:14px;padding:11px 13px;font-size:.84rem;margin-bottom:12px}
 .foot{font-size:.76rem;color:var(--faint);text-align:center;margin-top:20px;line-height:1.55}
+.foot a{color:inherit;text-decoration:none}
+.foot a:hover{color:var(--accent)}
+.foot .fsep{opacity:.6;margin:0 2px}
+.foot .fli{display:inline-flex;vertical-align:-2px}
 .optrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .optrow:first-of-type{border-top:0}
 .switch{position:relative;width:46px;height:28px;flex:none}
@@ -584,7 +588,7 @@ function renderDash(){
   let k=0,rv=0;b.cards.forEach(c=>{const f=st.fc[c.id];if(f&&f.s==='k')k++;else if(f&&f.s==='r')rv++;});const un=b.cards.length-k-rv;
   h+='<div class="card"><div class="row between"><h3 style="margin:0">Concept flashcards</h3><button class="link" data-act="goto" data-v="fc">Open ›</button></div><div class="dist" style="margin-top:12px"><i style="width:'+(k/b.cards.length*100)+'%;background:var(--ok)"></i><i style="width:'+(rv/b.cards.length*100)+'%;background:var(--bad)"></i></div><div class="leg2"><span><i style="background:var(--ok)"></i>Known · '+k+'</span><span><i style="background:var(--bad)"></i>To revise · '+rv+'</span><span>Not seen · '+un+' of '+b.cards.length+'</span></div></div>';
   h+='<div class="card"><h3>Your data</h3><div class="sub">Progress for both banks is saved in this browser on this device. Save a backup now and then.</div><div class="row wrap" style="gap:8px"><button class="btn sm soft" data-act="backup">Save backup</button><button class="btn sm" data-act="restore">Restore backup</button><button class="btn sm badb" data-act="reset">Reset '+esc(b.name)+' progress</button></div></div>';
-  h+='<div class="foot span">'+esc(b.source)+'<br>'+b.q.length+' MCQs · '+b.cards.length+' concept cards</div>';
+  h+='<div class="foot span">Created by: CA Onil Shah <span class="fsep">|</span> <a href="mailto:orsshah@gmail.com">orsshah@gmail.com</a> <span class="fsep">|</span> <a href="tel:+919019079090">9019079090</a> <span class="fsep">|</span> <a class="fli" href="https://www.linkedin.com/in/caonilshah/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile of CA Onil Shah" title="LinkedIn"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg></a></div>';
   $('#tab-dash').innerHTML='<div class="cols">'+h+'</div>';
 }
 function kpi(k,v,d){return '<div class="kpi"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div></div>';}
